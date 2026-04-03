@@ -6,7 +6,7 @@
   <title>Controle de Acompanhamento Escolar</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#0f172a;color:#fff}
+    body{margin:0;font-family:Arial,sans-serif;background:#0f172a;color:#fff}
     .wrap{min-height:100vh;padding:20px}
     .container{max-width:980px;margin:0 auto}
     .card{background:#111827;padding:20px;border-radius:14px;margin-bottom:18px}
@@ -15,8 +15,7 @@
     .label{margin-bottom:6px;opacity:.85;font-size:14px}
     input,select,textarea{width:100%;padding:12px;border-radius:8px;border:none;background:#f8fafc;color:#111827;box-sizing:border-box;font-size:16px}
     textarea{min-height:90px}
-    button{padding:12px 16px;border:none;border-radius:8px;font-weight:700;cursor:pointer;transition:0.2s}
-    button:active{opacity:0.7}
+    button{padding:12px 16px;border:none;border-radius:8px;font-weight:700;cursor:pointer}
     .green{background:#22c55e;color:#fff}.blue{background:#3b82f6;color:#fff}.gray{background:#1f2937;color:#fff}
     .nav{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
     .block{background:#e2e8f0;padding:14px;border-radius:10px;margin-bottom:14px}
@@ -26,20 +25,20 @@
     th,td{border:1px solid #cbd5e1;padding:8px;text-align:left}
     th{background:#e2e8f0}
     .preview{width:90px;height:90px;object-fit:cover;border-radius:12px}
-    .signature{width:220px;height:100px;object-fit:contain;background:#fff;border-radius:12px;padding:8px}
-    .toast {position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(34,197,94,0.95);color:white;padding:16px 24px;border-radius:12px;font-weight:bold;opacity:0;transition:0.3s;z-index:9999;pointer-events:none}
-    .toast.show {opacity:1}
-    @media print{body{background:#fff}.print-hide{display:none!important}}
+    .signature{width:200px;height:80px;object-fit:contain;background:#fff;border-radius:8px}
+    .toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(34,197,94,0.9);color:white;padding:16px 24px;border-radius:12px;opacity:0;transition:0.3s;z-index:9999;pointer-events:none}
+    .toast.show{opacity:1}
+    @media print{.print-hide{display:none!important}body{background:#fff}}
   </style>
 </head>
 <body>
 
 <div id="login" class="wrap">
-  <div class="container" style="max-width:320px;margin-top:10vh;">
+  <div class="container" style="max-width:320px;margin-top:10vh">
     <div class="card">
-      <h2>Controle Escolar</h2>
-      <input id="senha" type="password" placeholder="Senha de acesso" />
-      <button id="entrarBtn" class="green" style="width:100%;margin-top:15px">Entrar</button>
+      <h2 style="margin-top:0">Controle Escolar</h2>
+      <input id="senha" type="password" placeholder="Senha" />
+      <button id="entrarBtn" class="green" style="width:100%;margin-top:12px">Entrar</button>
     </div>
   </div>
 </div>
@@ -47,10 +46,11 @@
 <div id="app" class="wrap hidden">
   <div class="container">
     <div class="card print-hide">
-      <h2>Painel de Controle</h2>
+      <h2 style="margin:0">Menu Principal</h2>
       <div class="nav">
         <button data-aba="inicio" class="navbtn gray">Home</button>
-        <button data-aba="alunos" class="navbtn gray">Alunos</button>
+        <button data-aba="alunos" class="navbtn gray">Cadastrar Aluno</button>
+        <button data-aba="meus_alunos" class="navbtn gray">Meus Alunos</button>
         <button data-aba="lancamento" class="navbtn gray">Lançar Registro</button>
         <button data-aba="relatorios" class="navbtn gray">Relatórios</button>
         <button data-aba="perfil" class="navbtn gray">Meu Perfil</button>
@@ -67,28 +67,57 @@
       </div>
     </div>
 
+    <div id="aba-perfil" class="aba hidden">
+      <div class="card">
+        <h3>Dados da Monitora</h3>
+        <div class="grid">
+          <input id="m_nome" placeholder="Seu Nome Completo">
+          <input id="m_cpf" placeholder="Seu CPF">
+          <input id="m_cnpj" placeholder="Seu CNPJ">
+          <div>
+            <div class="label">Assinatura Digital (Upload)</div>
+            <input id="m_assin_input" type="file" accept="image/*">
+          </div>
+        </div>
+        <div id="m_preview_area" style="margin-top:15px"></div>
+        <button id="salvarPerfilBtn" class="green" style="margin-top:15px">Salvar Perfil</button>
+      </div>
+    </div>
+
     <div id="aba-alunos" class="aba hidden">
       <div class="card">
-        <h3>Cadastrar Aluno</h3>
+        <h3>Cadastro de Aluno</h3>
         <div class="grid">
           <input id="a_nome" placeholder="Nome do Aluno">
           <input id="a_escola" placeholder="Escola">
-          <input id="a_horario" placeholder="Horário (ex: 08:00 às 12:00)">
+          <input id="a_serie" placeholder="Série/Ano">
+          <input id="a_turma" placeholder="Turma">
+          <div><div class="label">Nascimento</div><input id="a_nasc" type="date"></div>
+          <input id="a_resp" placeholder="Nome do Responsável">
+          <input id="a_tel" placeholder="Telefone do Responsável">
+          <div>
+            <div class="label">Foto do Aluno</div>
+            <input id="a_foto_input" type="file" accept="image/*">
+          </div>
         </div>
         <button id="salvarAlunoBtn" class="green" style="margin-top:15px">Salvar Aluno</button>
       </div>
-      <div id="listaAlunos"></div>
+    </div>
+
+    <div id="aba-meus_alunos" class="aba hidden">
+      <div id="listaMeusAlunos"></div>
     </div>
 
     <div id="aba-lancamento" class="aba hidden">
       <div class="card">
-        <h3>Novo Registro</h3>
+        <h3>Novo Atendimento</h3>
         <div class="grid">
           <select id="l_aluno"><option value="">Selecione o Aluno</option></select>
           <input id="l_data" type="date">
-          <textarea id="l_obs" placeholder="O que aconteceu hoje?"></textarea>
+          <select id="l_turno"><option>Manhã</option><option>Tarde</option></select>
         </div>
-        <button id="salvarLancamentoBtn" class="green" style="margin-top:15px">Salvar Atendimento</button>
+        <textarea id="l_obs" placeholder="Observações do dia..." style="margin-top:12px"></textarea>
+        <button id="salvarRegistroBtn" class="green" style="margin-top:12px">Salvar e Limpar</button>
       </div>
       <div id="ultimosRegistros"></div>
     </div>
@@ -96,25 +125,20 @@
     <div id="aba-relatorios" class="aba hidden">
       <div class="card print-hide">
         <h3>Gerar Relatório</h3>
-        <select id="r_aluno"><option value="">Selecione o Aluno</option></select>
-        <button id="imprimirBtn" class="blue" style="margin-top:10px">Imprimir/PDF</button>
+        <div class="grid">
+          <select id="r_aluno"><option value="">Selecione o Aluno</option></select>
+          <input id="r_mes" type="month">
+        </div>
+        <button id="imprimirBtn" class="blue" style="margin-top:12px">Imprimir Relatório</button>
       </div>
       <div class="card-report">
-        <h2 align="center">RELATÓRIO ESCOLAR</h2>
-        <div id="rel_corpo"></div>
-        <table style="margin-top:20px">
-          <thead><tr><th>Data</th><th>Observação</th></tr></thead>
+        <h2 align="center">Relatório de Acompanhamento</h2>
+        <div id="rel_dados"></div>
+        <table style="margin-top:15px">
+          <thead><tr><th>Data</th><th>Turno</th><th>Observação</th></tr></thead>
           <tbody id="rel_tabela"></tbody>
         </table>
-      </div>
-    </div>
-
-    <div id="aba-perfil" class="aba hidden">
-      <div class="card">
-        <h3>Meu Perfil (Monitora)</h3>
-        <input id="m_nome" placeholder="Seu Nome">
-        <input id="m_cpf" placeholder="Seu CPF" style="margin-top:10px">
-        <button id="salvarPerfilBtn" class="green" style="margin-top:15px">Salvar Perfil</button>
+        <div id="rel_assinatura_area" style="margin-top:30px;text-align:center"></div>
       </div>
     </div>
 
@@ -127,77 +151,91 @@
 const PASSWORD = "acesso123";
 let state = { monitora: {}, alunos: [], registros: [] };
 
-function save() { 
-  localStorage.setItem("DATA_GP", JSON.stringify(state)); 
-  render();
-}
+function save() { localStorage.setItem("SISTEMA_V3", JSON.stringify(state)); render(); }
+function load() { const d = localStorage.getItem("SISTEMA_V3"); if(d) state = JSON.parse(d); }
 
-function load() {
-  const d = localStorage.getItem("DATA_GP");
-  if(d) state = JSON.parse(d);
+function toBase64(file) {
+  return new Promise((res) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.readAsDataURL(file);
+  });
 }
 
 function render() {
   h_alunos.textContent = state.alunos.length;
   h_regs.textContent = state.registros.length;
 
-  // Atualiza listas de alunos
   l_aluno.innerHTML = '<option value="">Selecione o Aluno</option>';
   r_aluno.innerHTML = '<option value="">Selecione o Aluno</option>';
-  listaAlunos.innerHTML = "";
-  
+  listaMeusAlunos.innerHTML = "";
+
   state.alunos.forEach(a => {
     const opt = `<option value="${a.id}">${a.nome}</option>`;
     l_aluno.innerHTML += opt;
     r_aluno.innerHTML += opt;
-    listaAlunos.innerHTML += `<div class="rowitem card"><span>${a.nome}</span> <button onclick="removerAluno('${a.id}')" class="blue">Excluir</button></div>`;
+    
+    listaMeusAlunos.innerHTML += `
+      <div class="card rowitem">
+        <div style="display:flex;gap:15px;align-items:center">
+          ${a.foto ? `<img src="${a.foto}" class="preview">` : `<div class="preview gray"></div>`}
+          <div><strong>${a.nome}</strong><br><small>${a.escola} - ${a.serie}</small></div>
+        </div>
+        <button onclick="removerAluno('${a.id}')" class="blue">Excluir</button>
+      </div>`;
   });
 
-  // Ultimos registros
   ultimosRegistros.innerHTML = "";
   [...state.registros].reverse().slice(0,5).forEach(r => {
     const alu = state.alunos.find(x => x.id === r.alunoId);
-    ultimosRegistros.innerHTML += `<div class="record"><strong>${alu?.nome}</strong> - ${r.data}<br>${r.obs}</div>`;
+    ultimosRegistros.innerHTML += `<div class="record"><strong>${alu?.nome}</strong> (${r.data})<br>${r.obs}</div>`;
   });
 }
 
-// LOGIN
 entrarBtn.onclick = () => {
-  if(senha.value === PASSWORD) {
-    login.classList.add("hidden");
-    app.classList.remove("hidden");
-    l_data.value = new Date().toISOString().split('T')[0];
-    setAba("inicio");
-  } else { alert("Senha incorreta"); }
+  if(senha.value === PASSWORD) { login.classList.add("hidden"); app.classList.remove("hidden"); setAba("inicio"); }
+  else alert("Senha incorreta");
 };
 
-// NAVEGAÇÃO
 function setAba(n) {
   document.querySelectorAll(".aba").forEach(a => a.classList.add("hidden"));
   document.getElementById("aba-"+n).classList.remove("hidden");
+  l_data.value = new Date().toISOString().split('T')[0];
   render();
 }
 document.querySelectorAll(".navbtn").forEach(b => b.onclick = () => setAba(b.dataset.aba));
 
-// AÇÕES
-salvarAlunoBtn.onclick = () => {
-  if(!a_nome.value) return;
-  state.alunos.push({ id: Date.now().toString(), nome: a_nome.value, escola: a_escola.value });
-  a_nome.value = ""; a_escola.value = "";
-  save();
-  showToast();
+// AÇÕES MONITOR
+salvarPerfilBtn.onclick = async () => {
+  state.monitora.nome = m_nome.value;
+  state.monitora.cpf = m_cpf.value;
+  state.monitora.cnpj = m_cnpj.value;
+  if(m_assin_input.files[0]) state.monitora.assinatura = await toBase64(m_assin_input.files[0]);
+  save(); showToast();
 };
 
-function removerAluno(id) {
-  state.alunos = state.alunos.filter(a => a.id !== id);
-  save();
-}
+// AÇÕES ALUNO
+salvarAlunoBtn.onclick = async () => {
+  if(!a_nome.value) return;
+  const novo = {
+    id: Date.now().toString(),
+    nome: a_nome.value, escola: a_escola.value, serie: a_serie.value, turma: a_turma.value,
+    nasc: a_nasc.value, resp: a_resp.value, tel: a_tel.value,
+    foto: a_foto_input.files[0] ? await toBase64(a_foto_input.files[0]) : ""
+  };
+  state.alunos.push(novo);
+  a_nome.value = ""; a_escola.value = ""; a_foto_input.value = "";
+  save(); showToast();
+};
 
-salvarLancamentoBtn.onclick = () => {
-  if(!l_aluno.value || !l_obs.value) return alert("Preencha tudo");
-  state.registros.push({ alunoId: l_aluno.value, data: l_data.value, obs: l_obs.value });
+function removerAluno(id) { if(confirm("Excluir aluno e registros?")) { state.alunos = state.alunos.filter(a=>a.id!==id); state.registros = state.registros.filter(r=>r.alunoId!==id); save(); } }
+
+// LANÇAMENTO (ESTACA ZERO)
+salvarRegistroBtn.onclick = () => {
+  if(!l_aluno.value || !l_obs.value) return alert("Preencha o aluno e a observação");
+  state.registros.push({ alunoId: l_aluno.value, data: l_data.value, turno: l_turno.value, obs: l_obs.value });
   
-  // ESTACA ZERO - LIMPA TUDO
+  // LIMPEZA (ESTACA ZERO)
   l_obs.value = "";
   l_aluno.value = "";
   
@@ -205,21 +243,27 @@ salvarLancamentoBtn.onclick = () => {
   showToast();
 };
 
-r_aluno.onchange = () => {
+r_aluno.onchange = renderRelatorio;
+r_mes.onchange = renderRelatorio;
+
+function renderRelatorio() {
   const alu = state.alunos.find(x => x.id === r_aluno.value);
-  rel_corpo.innerHTML = `<strong>Aluno:</strong> ${alu?.nome} | <strong>Escola:</strong> ${alu?.escola}`;
+  if(!alu) return;
+  rel_dados.innerHTML = `
+    <strong>Monitora:</strong> ${state.monitora.nome || "-"} | CPF: ${state.monitora.cpf || "-"} | CNPJ: ${state.monitora.cnpj || "-"}<br>
+    <strong>Aluno:</strong> ${alu.nome} | Série: ${alu.serie} | Responsável: ${alu.resp} (${alu.tel})`;
+  
   rel_tabela.innerHTML = "";
-  state.registros.filter(r => r.alunoId === r_aluno.value).forEach(r => {
-    rel_tabela.innerHTML += `<tr><td>${r.data}</td><td>${r.obs}</td></tr>`;
+  const filtrados = state.registros.filter(r => r.alunoId === r_aluno.value && (!r_mes.value || r.data.startsWith(r_mes.value)));
+  filtrados.forEach(r => {
+    rel_tabela.innerHTML += `<tr><td>${r.data}</td><td>${r.turno}</td><td>${r.obs}</td></tr>`;
   });
-};
+  
+  rel_assinatura_area.innerHTML = state.monitora.assinatura ? `<img src="${state.monitora.assinatura}" class="signature"><br><small>Assinatura da Monitora</small>` : "__________________________";
+}
 
 imprimirBtn.onclick = () => window.print();
-
-function showToast() {
-  toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 2000);
-}
+function showToast() { toast.classList.add("show"); setTimeout(()=>toast.classList.remove("show"), 2000); }
 
 load();
 render();
