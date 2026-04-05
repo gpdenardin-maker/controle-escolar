@@ -4,8 +4,11 @@
 <meta charset="UTF-8">
 <title>Monitoria Pro — MVP Profissional</title>
 <style>
-html,body{margin:0;height:100%;font-family:system-ui;background:#0f172a;color:#e2e8f0}
-.app{max-width:1100px;margin:auto;padding:20px}
+html,body{margin:0;min-height:100vh;font-family:system-ui;background:#0f172a;color:#e2e8f0}
+body{display:flex;flex-direction:column}
+#app{flex:1;display:flex;flex-direction:column}
+*{box-sizing:border-box}
+.app{max-width:1100px;margin:auto;padding:20px;width:100%}
 .nav{display:flex;gap:10px;margin-bottom:10px}
 .nav button{flex:1;background:#1e293b;color:#fff;border:1px solid #334155;padding:10px;border-radius:10px}
 .nav button.active{background:#22c55e;color:#022c22}
@@ -13,7 +16,7 @@ html,body{margin:0;height:100%;font-family:system-ui;background:#0f172a;color:#e
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 @media(max-width:700px){.grid{grid-template-columns:1fr}}
 label{font-size:13px;margin-top:8px;display:block;color:#94a3b8}
-input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #334155;background:#020617;color:#fff;margin-bottom:8px}
+input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #334155;background:#020617;color:#fff;margin-bottom:8px;display:block}
 .small{max-width:120px}
 .xsmall{max-width:90px}
 button{background:#22c55e;color:#022c22;border:none;padding:10px;border-radius:10px;margin-top:10px;cursor:pointer}
@@ -90,28 +93,30 @@ button{background:#22c55e;color:#022c22;border:none;padding:10px;border-radius:1
 <div class="preview" id="prev" style="margin-top:10px;width:56px;height:56px"></div>
 </div>
 
-<!-- FORM LIMPO E ALINHADO -->
-<div style="display:flex;flex-direction:column;gap:12px">
+<!-- FORM ORGANIZADO PROFISSIONAL -->
+<div style="display:flex;flex-direction:column;gap:16px">
 
 <label>Nome do aluno</label>
 <input id="nome">
 
-<!-- LINHA: DATA + SERIE + TURMA -->
-<div style="display:flex;gap:12px;align-items:flex-end">
-<div style="width:160px">
+<!-- LINHA ORGANIZADA -->
+<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end">
+
+<div style="width:140px">
 <label>Data de nascimento</label>
-<input type="date" id="nasc" style="width:100%">
+<input type="date" id="nasc">
 </div>
 
-<div style="width:80px">
+<div style="width:70px">
 <label>Série</label>
 <input id="serie">
 </div>
 
-<div style="width:80px">
+<div style="width:70px">
 <label>Turma</label>
 <input id="turma">
 </div>
+
 </div>
 
 <label>Escola</label>
@@ -120,23 +125,25 @@ button{background:#22c55e;color:#022c22;border:none;padding:10px;border-radius:1
 <label>Responsável</label>
 <input id="resp">
 
-<!-- HORÁRIOS MAIS COMPACTOS -->
-<div style="display:flex;gap:12px">
+<!-- HORÁRIOS ALINHADOS -->
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+
 <div style="flex:1">
-<label>Horário de entrada</label>
+<label>Entrada</label>
 <input type="time" id="h1" value="08:00">
 </div>
 
 <div style="flex:1">
-<label>Horário de saída</label>
+<label>Saída</label>
 <input type="time" id="h2" value="12:00">
 </div>
+
 </div>
 
 <!-- OBSERVAÇÕES AJUSTADO -->
 <div style="display:flex;flex-direction:column;align-items:center;margin-top:6px">
 <label style="align-self:flex-start">Observações Gerais</label>
-<textarea id="obsAluno" style="height:70px;width:100%;max-width:620px"></textarea>
+<textarea id="obsAluno" style="height:70px;width:100%;max-width:100%"></textarea>
 </div>
 
 <button onclick="salvarAluno()">Salvar</button>
