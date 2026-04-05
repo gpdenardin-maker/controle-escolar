@@ -1,571 +1,138 @@
-<!token html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Monitora Pro - Sistema de Gestão Escolar</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoria Pro - Painel Administrativo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --primary: #6366f1; --success: #22c55e; --danger: #ef4444; }
-        body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .input-field { background: #1e293b; border: 1px solid #334155; color: white; border-radius: 8px; padding: 10px; width: 100%; outline: none; }
-        .input-field:focus { border-color: var(--primary); }
-        .btn { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-success { background: var(--success); color: white; }
-        .btn-ghost { background: transparent; border: 1px solid #334155; }
-        .hidden { display: none !important; }
-        .tab-active { border-bottom: 3px solid var(--primary); color: var(--primary); }
-        .toast { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; z-index: 1000; transform: translateY(100px); transition: 0.3s; }
-        .toast.show { transform: translateY(0); }
-        @media print { .no-print { display: none !important; } .print-only { display: block !important; } body { background: white; color: black; } }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); }
+        @media print { .no-print { display: none; } }
     </style>
 </head>
-<body>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
 
-<div id="toast" class="toast shadow-lg"></div>
-
-<div id="view-login" class="flex items-center justify-center min-h-screen p-4">
-    <div class="glass p-8 rounded-2xl w-full max-w-md shadow-2xl">
-        <div class="text-center mb-8">
-            <div class="bg-indigo-500 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-4">
-                <i class="fas fa-graduation-cap text-3xl text-white"></i>
+    <div id="auth-section" class="flex items-center justify-center min-h-screen p-6">
+        <div class="bg-slate-800 p-8 rounded-3xl shadow-2xl w-full max-w-md border border-slate-700">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-black text-indigo-400">Monitoria Pro</h1>
+                <p class="text-slate-400 text-sm mt-2">Gestão Inteligente para Monitoras</p>
             </div>
-            <h1 class="text-2xl font-bold">Monitora Pro</h1>
-            <p class="text-slate-400">Sistema de Gestão e Relatórios</p>
-        </div>
-        <div class="space-y-4">
-            <div>
-                <label class="text-sm block mb-1">Senha de Acesso</label>
-                <input type="password" id="login-pass" class="input-field" placeholder="••••••••">
+            <div class="space-y-4">
+                <input id="email" type="email" placeholder="Seu e-mail" class="w-full p-4 rounded-2xl bg-slate-700 border-none focus:ring-2 focus:ring-indigo-500 outline-none">
+                <input id="password" type="password" placeholder="Sua senha" class="w-full p-4 rounded-2xl bg-slate-700 border-none focus:ring-2 focus:ring-indigo-500 outline-none">
+                <button onclick="login()" class="w-full bg-indigo-600 hover:bg-indigo-500 p-4 rounded-2xl font-bold transition-all transform active:scale-95 shadow-lg shadow-indigo-900/40">Entrar</button>
             </div>
-            <button onclick="handleLogin()" class="btn btn-primary w-full justify-center">Entrar no Sistema</button>
         </div>
     </div>
-</div>
 
-<div id="view-app" class="hidden">
-    <nav class="glass no-print sticky top-0 z-50 px-4 py-3 mb-6">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-2 font-bold text-indigo-400">
-                <i class="fas fa-brain"></i> MONITORIA INTELIGENTE
-            </div>
-            <div class="flex gap-4 overflow-x-auto">
-                <button onclick="showTab('home')" class="nav-item px-3 py-2 text-sm font-medium transition">Home</button>
-                <button onclick="showTab('alunos')" class="nav-item px-3 py-2 text-sm font-medium transition">Alunos</button>
-                <button onclick="showTab('rotina')" class="nav-item px-3 py-2 text-sm font-medium transition">Lançar Rotina</button>
-                <button onclick="showTab('relatorios')" class="nav-item px-3 py-2 text-sm font-medium transition">Relatórios</button>
-                <button onclick="showTab('eventos')" class="nav-item px-3 py-2 text-sm font-medium transition">Eventos</button>
-                <button onclick="showTab('config')" class="nav-item px-3 py-2 text-sm font-medium transition"><i class="fas fa-cog"></i></button>
-                <button onclick="showTab('lixeira')" class="nav-item px-3 py-2 text-sm font-medium transition text-red-400"><i class="fas fa-trash"></i></button>
-            </div>
-        </div>
-    </nav>
-
-    <main class="max-w-7xl mx-auto px-4 pb-20">
-        
-        <div id="tab-home" class="tab-content space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="glass p-6 rounded-xl border-l-4 border-indigo-500">
-                    <p class="text-slate-400 text-sm">Alunos Ativos</p>
-                    <h2 id="stat-alunos" class="text-3xl font-bold">0</h2>
-                </div>
-                <div class="glass p-6 rounded-xl border-l-4 border-emerald-500">
-                    <p class="text-slate-400 text-sm">Registros este mês</p>
-                    <h2 id="stat-regs" class="text-3xl font-bold">0</h2>
-                </div>
-                <div class="glass p-6 rounded-xl border-l-4 border-amber-500">
-                    <p class="text-slate-400 text-sm">Próximos Eventos</p>
-                    <h2 id="stat-eventos" class="text-3xl font-bold">0</h2>
+    <div id="app-section" class="hidden">
+        <nav class="no-print glass sticky top-0 z-50 border-b border-slate-700 p-4 mb-6">
+            <div class="max-w-5xl mx-auto flex justify-between items-center">
+                <h2 class="font-bold text-xl text-indigo-400">Painel Geral</h2>
+                <div class="flex items-center gap-4">
+                    <span id="user-display" class="hidden md:block text-xs text-slate-400"></span>
+                    <button onclick="logout()" class="bg-slate-700 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-900/30 text-red-400 transition-all">Sair</button>
                 </div>
             </div>
+        </nav>
 
-            <div class="glass p-6 rounded-xl">
-                <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-                    <i class="fas fa-bell text-amber-400"></i> Avisos e Aniversários
-                </h3>
-                <div id="home-notifications" class="space-y-3">
-                    </div>
-            </div>
-        </div>
-
-        <div id="tab-alunos" class="tab-content hidden space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-bold">Gestão de Alunos</h2>
-                <button onclick="openModalAluno()" class="btn btn-success"><i class="fas fa-plus"></i> Novo Aluno</button>
-            </div>
+        <main class="max-w-5xl mx-auto p-4 space-y-6">
             
-            <div class="flex gap-4 bg-slate-800 p-2 rounded-lg w-fit">
-                <button onclick="filterAlunos('ativo')" class="btn-filter text-sm px-4 py-1 rounded-md bg-indigo-600">Ativos</button>
-                <button onclick="filterAlunos('inativo')" class="btn-filter text-sm px-4 py-1 rounded-md">Inativos</button>
-                <button onclick="filterAlunos('todos')" class="btn-filter text-sm px-4 py-1 rounded-md">Todos</button>
-            </div>
-
-            <div id="lista-alunos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <section class="no-print bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-xl">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2">👤 Novo Aluno</h3>
+                <div class="flex flex-col md:flex-row gap-3">
+                    <input id="nome-aluno" type="text" placeholder="Nome Completo" class="flex-1 p-3 rounded-xl bg-slate-900 border-none focus:ring-2 focus:ring-indigo-500">
+                    <input id="escola-aluno" type="text" placeholder="Escola" class="flex-1 p-3 rounded-xl bg-slate-900 border-none focus:ring-2 focus:ring-indigo-500">
+                    <button onclick="addAluno()" class="bg-indigo-600 hover:bg-indigo-500 px-8 py-3 rounded-xl font-bold transition-all">Cadastrar</button>
                 </div>
-        </div>
+            </section>
 
-        <div id="tab-rotina" class="tab-content hidden">
-            <div class="max-w-2xl mx-auto glass p-8 rounded-2xl">
-                <h2 class="text-2xl font-bold mb-6">Registro de Rotina</h2>
-                <div class="space-y-4" id="form-rotina">
-                    <div>
-                        <label class="text-sm text-slate-400">Aluno</label>
-                        <select id="rotina-aluno" onchange="loadAlunoDefaults()" class="input-field"></select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-sm text-slate-400">Data</label>
-                            <input type="date" id="rotina-data" class="input-field">
-                        </div>
-                        <div>
-                            <label class="text-sm text-slate-400">Horário</label>
-                            <input type="text" id="rotina-horario" class="input-field" placeholder="Puxando do aluno...">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-sm text-slate-400">Observação do Dia</label>
-                        <textarea id="rotina-obs" class="input-field h-32" placeholder="Descreva como foi o atendimento..."></textarea>
-                    </div>
-                    <button onclick="saveRotina()" class="btn btn-primary w-full justify-center text-lg">
-                        <i class="fas fa-check-circle"></i> Salvar Registro
-                    </button>
+            <div id="lista-alunos" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 </div>
-            </div>
-        </div>
-
-        <div id="tab-relatorios" class="tab-content hidden space-y-6">
-            <div class="glass p-6 rounded-xl no-print">
-                <h2 class="text-xl font-bold mb-4">Gerador de Relatórios Profissionais</h2>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <select id="rel-aluno" class="input-field"></select>
-                    <select id="rel-periodo" class="input-field">
-                        <option value="semanal">Semanal</option>
-                        <option value="mensal" selected>Mensal</option>
-                        <option value="anual">Anual</option>
-                        <option value="geral">Geral</option>
-                    </select>
-                    <input type="month" id="rel-mes" class="input-field">
-                    <button onclick="generateReport()" class="btn btn-primary">Gerar Visualização</button>
-                </div>
-            </div>
-
-            <div id="report-container" class="report-view hidden">
-                </div>
-        </div>
-
-        <div id="tab-eventos" class="tab-content hidden space-y-6">
-             <div class="max-w-xl mx-auto glass p-6 rounded-xl">
-                <h2 class="text-xl font-bold mb-4">Agendar Novo Evento</h2>
-                <div class="space-y-4">
-                    <input id="ev-titulo" placeholder="Título (ex: Dia de Prova)" class="input-field">
-                    <textarea id="ev-desc" placeholder="Descrição" class="input-field"></textarea>
-                    <input type="date" id="ev-data" class="input-field">
-                    <button onclick="saveEvento()" class="btn btn-primary w-full">Agendar Evento</button>
-                </div>
-             </div>
-        </div>
-
-        <div id="tab-config" class="tab-content hidden">
-            <div class="glass p-8 rounded-2xl max-w-4xl mx-auto">
-                <h2 class="text-2xl font-bold mb-6">Configurações da Monitora</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="text-sm">Nome da Monitora</label>
-                        <input id="mon-nome" class="input-field">
-                    </div>
-                    <div>
-                        <label class="text-sm">Nome do Serviço</label>
-                        <input id="mon-servico" class="input-field" placeholder="Ex: Monitoria Pedagógica">
-                    </div>
-                    <div>
-                        <label class="text-sm">CPF/CNPJ</label>
-                        <input id="mon-doc" class="input-field">
-                    </div>
-                    <div>
-                        <label class="text-sm">E-mail</label>
-                        <input id="mon-email" class="input-field">
-                    </div>
-                    <div>
-                        <label class="text-sm">Telefone</label>
-                        <input id="mon-tel" class="input-field">
-                    </div>
-                    <div>
-                        <label class="text-sm">Assinatura Digital (Upload)</label>
-                        <input type="file" id="mon-assin" accept="image/*" class="input-field text-sm">
-                    </div>
-                </div>
-                <button onclick="saveMonitora()" class="btn btn-success mt-8">Atualizar Meus Dados</button>
-            </div>
-        </div>
-
-        <div id="tab-lixeira" class="tab-content hidden space-y-4">
-            <div class="flex items-center gap-4 text-red-400">
-                <i class="fas fa-trash-restore text-2xl"></i>
-                <h2 class="text-xl font-bold">Lixeira de Recuperação</h2>
-            </div>
-            <p class="text-sm text-slate-400">Itens apagados ficam aqui. Excluir daqui é permanente.</p>
-            <div id="lista-lixeira" class="space-y-3">
-                </div>
-        </div>
-
-    </main>
-</div>
-
-<div id="modal-aluno" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[100]">
-    <div class="glass w-full max-w-4xl max-h-[90vh] overflow-y-auto p-8 rounded-2xl">
-        <div class="flex justify-between items-center mb-6">
-            <h2 id="modal-aluno-title" class="text-2xl font-bold">Cadastrar Aluno</h2>
-            <button onclick="closeModalAluno()" class="text-2xl">&times;</button>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="form-aluno">
-            <div class="md:col-span-2 flex flex-col items-center gap-4 bg-slate-800/50 p-6 rounded-xl">
-                <img id="aluno-img-preview" src="https://via.placeholder.com/120" class="w-32 h-32 rounded-full object-cover border-4 border-indigo-500">
-                <input type="file" id="aluno-foto" accept="image/*" class="text-sm">
-            </div>
-            <input id="aluno-nome" placeholder="Nome Completo" class="input-field">
-            <input id="aluno-nasc" type="date" class="input-field" onchange="calcIdadeForm()">
-            <input id="aluno-idade" placeholder="Idade (Auto)" class="input-field bg-slate-900" readonly>
-            <input id="aluno-escola" placeholder="Nome da Escola" class="input-field">
-            <input id="aluno-responsavel" placeholder="Nome do Responsável" class="input-field">
-            <input id="aluno-tel-resp" placeholder="Telefone Responsável" class="input-field">
-            <input id="aluno-horario" placeholder="Horário Padrão (ex: 08:00 às 11:30)" class="input-field">
-            <select id="aluno-status" class="input-field">
-                <option value="ativo">Ativo</option>
-                <option value="inativo">Inativo</option>
-            </select>
-            <div class="md:col-span-2">
-                <textarea id="aluno-obs" placeholder="Observações Gerais (Saúde, alergias, dificuldades...)" class="input-field h-24"></textarea>
-            </div>
-        </div>
-        <div class="flex justify-end gap-4 mt-8">
-            <button onclick="closeModalAluno()" class="btn btn-ghost">Cancelar</button>
-            <button onclick="saveAluno()" class="btn btn-success">Salvar Aluno</button>
-        </div>
+        </main>
     </div>
-</div>
+
+    <div id="print-area" class="hidden bg-white text-black p-10 min-h-screen"></div>
 
 <script>
-// --- BANCO DE DADOS LOCAL (SIMULANDO SUPABASE) ---
-let state = {
-    monitora: JSON.parse(localStorage.getItem('mon_data')) || { nome: '', servico: '', doc: '', email: '', tel: '', assinatura: '' },
-    alunos: JSON.parse(localStorage.getItem('mon_alunos')) || [],
-    registros: JSON.parse(localStorage.getItem('mon_registros')) || [],
-    eventos: JSON.parse(localStorage.getItem('mon_eventos')) || [],
-    lixeira: JSON.parse(localStorage.getItem('mon_trash')) || [],
-    config: { senha: 'acesso123' }
-};
+    const SUPABASE_URL = 'SUA_URL_AQUI';
+    const SUPABASE_KEY = 'SUA_KEY_AQUI';
+    const supabase = supabasejs.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// --- NAVEGAÇÃO E LOGIN ---
-function handleLogin() {
-    if(document.getElementById('login-pass').value === state.config.senha) {
-        document.getElementById('view-login').classList.add('hidden');
-        document.getElementById('view-app').classList.remove('hidden');
-        initApp();
-    } else {
-        showToast("❌ Senha incorreta!", "bg-red-500");
-    }
-}
-
-function showTab(tab) {
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('tab-active'));
-    document.getElementById('tab-' + tab).classList.remove('hidden');
-    event.currentTarget.classList.add('tab-active');
-    if(tab === 'alunos') renderAlunos();
-    if(tab === 'lixeira') renderLixeira();
-    if(tab === 'rotina') resetFormRotina();
-}
-
-// --- LOGICA DE ALUNOS ---
-function saveAluno() {
-    const id = document.getElementById('modal-aluno').dataset.editId || Date.now().toString();
-    const index = state.alunos.findIndex(a => a.id === id);
-
-    const aluno = {
-        id,
-        nome: document.getElementById('aluno-nome').value,
-        nasc: document.getElementById('aluno-nasc').value,
-        idade: calcIdade(document.getElementById('aluno-nasc').value),
-        escola: document.getElementById('aluno-escola').value,
-        responsavel: document.getElementById('aluno-responsavel').value,
-        tel: document.getElementById('aluno-tel-resp').value,
-        horario: document.getElementById('aluno-horario').value,
-        status: document.getElementById('aluno-status').value,
-        obs: document.getElementById('aluno-obs').value,
-        foto: document.getElementById('aluno-img-preview').src
-    };
-
-    if(index > -1) state.alunos[index] = aluno;
-    else state.alunos.push(aluno);
-
-    saveState();
-    closeModalAluno();
-    showToast("✅ Salvo com sucesso!", "bg-green-500");
-    renderAlunos();
-    updateStats();
-}
-
-function renderAlunos(filter = 'ativo') {
-    const list = document.getElementById('lista-alunos');
-    list.innerHTML = "";
-    
-    let filtered = state.alunos;
-    if(filter !== 'todos') filtered = state.alunos.filter(a => a.status === filter);
-    
-    filtered.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(a => {
-        list.innerHTML += `
-            <div class="glass p-5 rounded-xl flex items-center gap-4 relative group">
-                <img src="${a.foto}" class="w-16 h-16 rounded-full object-cover">
-                <div class="flex-1 min-w-0">
-                    <h4 class="font-bold truncate">${a.nome}</h4>
-                    <p class="text-xs text-slate-400">${a.idade} anos • ${a.status.toUpperCase()}</p>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="editAluno('${a.id}')" class="p-2 hover:text-indigo-400"><i class="fas fa-edit"></i></button>
-                    <button onclick="trashAluno('${a.id}')" class="p-2 hover:text-red-400"><i class="fas fa-trash"></i></button>
-                </div>
-            </div>
-        `;
-    });
-}
-
-// --- LANÇAMENTO DE ROTINA ---
-function saveRotina() {
-    const alunoId = document.getElementById('rotina-aluno').value;
-    if(!alunoId) return showToast("❌ Selecione um aluno", "bg-red-500");
-
-    const reg = {
-        id: Date.now().toString(),
-        alunoId,
-        data: document.getElementById('rotina-data').value,
-        horario: document.getElementById('rotina-horario').value,
-        obs: document.getElementById('rotina-obs').value
-    };
-
-    state.registros.push(reg);
-    saveState();
-    showToast("✅ Salvo com sucesso!", "bg-green-500");
-    resetFormRotina();
-    updateStats();
-}
-
-function resetFormRotina() {
-    document.getElementById('rotina-aluno').value = "";
-    document.getElementById('rotina-data').value = new Date().toISOString().split('T')[0];
-    document.getElementById('rotina-horario').value = "";
-    document.getElementById('rotina-horario').placeholder = "Horário padrão do aluno";
-    document.getElementById('rotina-obs').value = "";
-    populateSelects();
-}
-
-// --- LIXEIRA ---
-function trashAluno(id) {
-    const idx = state.alunos.findIndex(a => a.id === id);
-    const item = state.alunos.splice(idx, 1)[0];
-    state.lixeira.push({ type: 'aluno', data: item, deletedAt: new Date() });
-    saveState();
-    renderAlunos();
-    showToast("🗑️ Enviado para lixeira", "bg-amber-500");
-}
-
-function renderLixeira() {
-    const list = document.getElementById('lista-lixeira');
-    list.innerHTML = state.lixeira.length ? "" : "<p class='text-center opacity-50'>Lixeira vazia</p>";
-    state.lixeira.forEach((item, idx) => {
-        list.innerHTML += `
-            <div class="glass p-4 rounded-lg flex justify-between items-center">
-                <span><i class="fas fa-user mr-2"></i> ${item.data.nome}</span>
-                <div class="flex gap-3">
-                    <button onclick="restoreItem(${idx})" class="text-green-400 text-sm">Restaurar</button>
-                    <button onclick="permDelete(${idx})" class="text-red-500 text-sm">Excluir Permanente</button>
-                </div>
-            </div>
-        `;
-    });
-}
-
-function permDelete(idx) {
-    if(confirm("⚠️ ATENÇÃO: Esta ação não pode ser desfeita. Deseja deletar permanentemente?")) {
-        state.lixeira.splice(idx, 1);
-        saveState();
-        renderLixeira();
-        showToast("❌ Excluído definitivamente", "bg-red-600");
-    }
-}
-
-// --- UTILITÁRIOS ---
-function calcIdade(data) {
-    if(!data) return 0;
-    const nasc = new Date(data);
-    const hoje = new Date();
-    let idade = hoje.getFullYear() - nasc.getFullYear();
-    if (hoje.getMonth() < nasc.getMonth() || (hoje.getMonth() == nasc.getMonth() && hoje.getDate() < nasc.getDate())) idade--;
-    return idade;
-}
-
-function calcIdadeForm() { document.getElementById('aluno-idade').value = calcIdade(document.getElementById('aluno-nasc').value) + " anos"; }
-
-function showToast(msg, color) {
-    const t = document.getElementById('toast');
-    t.innerText = msg;
-    t.className = `toast show ${color}`;
-    setTimeout(() => t.classList.remove('show'), 3000);
-}
-
-function saveState() {
-    localStorage.setItem('mon_alunos', JSON.stringify(state.alunos));
-    localStorage.setItem('mon_registros', JSON.stringify(state.registros));
-    localStorage.setItem('mon_trash', JSON.stringify(state.lixeira));
-    localStorage.setItem('mon_data', JSON.stringify(state.monitora));
-    localStorage.setItem('mon_eventos', JSON.stringify(state.eventos));
-}
-
-function initApp() {
-    updateStats();
-    populateSelects();
-    checkBirthdays();
-    showTab('home');
-}
-
-function updateStats() {
-    document.getElementById('stat-alunos').innerText = state.alunos.filter(a => a.status === 'ativo').length;
-    document.getElementById('stat-regs').innerText = state.registros.length;
-    document.getElementById('stat-eventos').innerText = state.eventos.length;
-}
-
-function populateSelects() {
-    const html = `<option value="">Selecionar aluno...</option>` + 
-        state.alunos.filter(a => a.status === 'ativo').map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
-    document.getElementById('rotina-aluno').innerHTML = html;
-    document.getElementById('rel-aluno').innerHTML = html;
-}
-
-function loadAlunoDefaults() {
-    const id = document.getElementById('rotina-aluno').value;
-    const a = state.alunos.find(x => x.id === id);
-    if(a) document.getElementById('rotina-horario').value = a.horario;
-}
-
-// --- RELATÓRIOS ---
-function generateReport() {
-    const id = document.getElementById('rel-aluno').value;
-    const mes = document.getElementById('rel-mes').value;
-    const aluno = state.alunos.find(a => a.id === id);
-    if(!aluno) return showToast("Selecione um aluno", "bg-red-500");
-
-    const regs = state.registros.filter(r => r.alunoId === id && r.data.startsWith(mes));
-    
-    const container = document.getElementById('report-container');
-    container.classList.remove('hidden');
-    container.innerHTML = `
-        <div class="bg-white text-black p-10 rounded-lg shadow-xl min-h-[1000px] flex flex-col justify-between">
-            <div>
-                <div class="flex justify-between border-b-2 border-indigo-500 pb-6 mb-8">
-                    <div>
-                        <h1 class="text-2xl font-bold text-indigo-700 uppercase">${state.monitora.servico || 'Monitoria Profissional'}</h1>
-                        <p class="text-sm font-bold">Monitora: ${state.monitora.nome}</p>
-                        <p class="text-xs">${state.monitora.email} | ${state.monitora.tel}</p>
-                        <p class="text-xs">Doc: ${state.monitora.doc}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-xs uppercase text-slate-500">Relatório Individual de Atendimento</p>
-                        <p class="text-xl font-bold">${mes}</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-8 mb-8 bg-slate-50 p-4 rounded-lg">
-                    <div>
-                        <p class="text-[10px] uppercase text-slate-500">Aluno(a)</p>
-                        <p class="font-bold">${aluno.nome}</p>
-                        <p class="text-sm">${aluno.escola}</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] uppercase text-slate-500">Dados Gerais</p>
-                        <p class="text-sm">Idade: ${aluno.idade} anos | Responsável: ${aluno.responsavel}</p>
-                        <p class="text-sm">Horário Padrão: ${aluno.horario}</p>
-                    </div>
-                </div>
-
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="bg-indigo-600 text-white">
-                            <th class="p-2 text-left">Data</th>
-                            <th class="p-2 text-left">Horário</th>
-                            <th class="p-2 text-left">Observação/Evolução</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${regs.map(r => `
-                            <tr class="border-b border-slate-200">
-                                <td class="p-2 font-bold">${r.data.split('-').reverse().join('/')}</td>
-                                <td class="p-2">${r.horario}</td>
-                                <td class="p-2 text-xs italic">${r.obs}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="text-center mt-20">
-                <img src="${state.monitora.assinatura}" class="mx-auto h-20 object-contain mb-2">
-                <div class="border-t border-black w-64 mx-auto pt-2">
-                    <p class="text-sm font-bold">${state.monitora.nome}</p>
-                    <p class="text-[10px] uppercase">Assinatura da Monitora Responsável</p>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// --- EVENTOS E ALERTAS ---
-function checkBirthdays() {
-    const hoje = new Date().toISOString().slice(5, 10); // MM-DD
-    const avisos = document.getElementById('home-notifications');
-    avisos.innerHTML = "";
-    
-    state.alunos.forEach(a => {
-        if(a.nasc.slice(5, 10) === hoje) {
-            avisos.innerHTML += `<div class="bg-indigo-500/20 p-3 rounded-lg border border-indigo-500/50 flex items-center gap-3">
-                <i class="fas fa-cake-candles text-indigo-400"></i>
-                <span><b>Hoje é aniversário de ${a.nome}!</b> (${a.idade} anos)</span>
-            </div>`;
+    // CONTROLE DE ACESSO
+    supabase.auth.onAuthStateChange((event, session) => {
+        const authView = document.getElementById('auth-section');
+        const appView = document.getElementById('app-section');
+        
+        if (session) {
+            authView.classList.add('hidden');
+            appView.classList.remove('hidden');
+            document.getElementById('user-display').innerText = session.user.email;
+            carregarAlunos();
+        } else {
+            authView.classList.remove('hidden');
+            appView.classList.add('hidden');
         }
     });
-}
 
-function openModalAluno() { document.getElementById('modal-aluno').classList.remove('hidden'); }
-function closeModalAluno() { 
-    document.getElementById('modal-aluno').classList.add('hidden');
-    document.getElementById('form-aluno').querySelectorAll('input, textarea').forEach(i => i.value = "");
-    document.getElementById('aluno-img-preview').src = "https://via.placeholder.com/120";
-    delete document.getElementById('modal-aluno').dataset.editId;
-}
+    async function login() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) alert("Erro: " + error.message);
+    }
 
-// Configurações de imagem
-document.getElementById('aluno-foto').onchange = async (e) => {
-    const reader = new FileReader();
-    reader.onload = () => document.getElementById('aluno-img-preview').src = reader.result;
-    reader.readAsDataURL(e.target.files[0]);
-};
+    async function logout() { await supabase.auth.signOut(); }
 
-document.getElementById('mon-assin').onchange = async (e) => {
-    const reader = new FileReader();
-    reader.onload = () => state.monitora.assinatura = reader.result;
-    reader.readAsDataURL(e.target.files[0]);
-};
+    // FUNÇÕES DE DADOS
+    async function addAluno() {
+        const nome = document.getElementById('nome-aluno').value;
+        const escola = document.getElementById('escola-aluno').value;
+        if (!nome) return alert("Digite o nome!");
 
-function saveMonitora() {
-    state.monitora.nome = document.getElementById('mon-nome').value;
-    state.monitora.servico = document.getElementById('mon-servico').value;
-    state.monitora.doc = document.getElementById('mon-doc').value;
-    state.monitora.email = document.getElementById('mon-email').value;
-    state.monitora.tel = document.getElementById('mon-tel').value;
-    saveState();
-    showToast("✅ Configurações salvas!", "bg-green-500");
-}
+        const { error } = await supabase.from('alunos').insert([{ nome, escola }]);
+        if (error) alert(error.message);
+        else {
+            document.getElementById('nome-aluno').value = '';
+            document.getElementById('escola-aluno').value = '';
+            carregarAlunos();
+        }
+    }
+
+    async function carregarAlunos() {
+        const { data, error } = await supabase.from('alunos')
+            .select('*')
+            .eq('status', 'ativo')
+            .order('nome');
+
+        const container = document.getElementById('lista-alunos');
+        container.innerHTML = data.map(aluno => `
+            <div class="bg-slate-800 p-5 rounded-3xl border border-slate-700 hover:border-indigo-500/50 transition-all group">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h4 class="font-bold text-xl text-white">${aluno.nome}</h4>
+                        <p class="text-sm text-slate-400">${aluno.escola || 'Escola não informada'}</p>
+                    </div>
+                    <button onclick="arquivarAluno('${aluno.id}')" class="text-slate-600 hover:text-red-400">🗑️</button>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button onclick="verDetalhes('${aluno.id}')" class="flex-1 bg-slate-700 hover:bg-indigo-600 text-xs py-2 rounded-lg font-bold transition-all">Ver Rotina</button>
+                    <button onclick="gerarPDF('${aluno.id}')" class="bg-slate-700 hover:bg-emerald-600 px-3 py-2 rounded-lg text-xs transition-all">📄</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function arquivarAluno(id) {
+        if(confirm("Deseja arquivar este aluno?")) {
+            await supabase.from('alunos').update({ status: 'arquivado' }).eq('id', id);
+            carregarAlunos();
+        }
+    }
+
+    // O n8n poderá usar essa mesma estrutura de dados para suas automações!
 </script>
 </body>
 </html>
