@@ -1,178 +1,280 @@
-import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Monitoria Pro — MVP Profissional</title>
+<style>
+html,body{margin:0;height:100%;font-family:system-ui;background:#0f172a;color:#e2e8f0}
+.app{max-width:1100px;margin:auto;padding:20px}
+.nav{display:flex;gap:10px;margin-bottom:10px}
+.nav button{flex:1;background:#1e293b;color:#fff;border:1px solid #334155;padding:10px;border-radius:10px}
+.nav button.active{background:#22c55e;color:#022c22}
+.card{background:#1e293b;border-radius:14px;padding:16px;margin-bottom:15px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+label{font-size:13px;margin-top:8px;display:block;color:#94a3b8}
+input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #334155;background:#020617;color:#fff;margin-bottom:8px}
+.small{max-width:120px}
+.xsmall{max-width:90px}
+button{background:#22c55e;color:#022c22;border:none;padding:10px;border-radius:10px;margin-top:10px;cursor:pointer}
+.center{display:flex;justify-content:center;align-items:center;height:100vh}
+.hidden{display:none}
+.msg{position:fixed;top:20px;right:20px;background:#22c55e;color:#022c22;padding:10px;border-radius:10px;display:none}
+.preview{width:48px;height:48px;background:#020617;border-radius:10px;overflow:hidden}
+.preview img{width:100%;height:100%;object-fit:cover}
+.lancamento-btn{width:60%;margin:10px auto;display:block;font-size:18px;padding:14px}
+.lista-item{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:8px;border-radius:10px;background:#020617}
+.lista-info{display:flex;gap:10px;align-items:center}
+.actions button{margin-left:5px;padding:6px 8px}
+.btn-delete{background:#334155;color:#e2e8f0}
+.btn-edit{background:#334155;color:#e2e8f0}
+</style>
+</head>
+<body>
 
-export default function AppEscolar() {
-  const [user, setUser] = useState(null);
-  const [screen, setScreen] = useState("login");
+<div id="msg" class="msg"></div>
 
-  const [alunos, setAlunos] = useState([]);
-  const [lancamentos, setLancamentos] = useState([]);
+<div id="loginScreen" class="center">
+<form class="card" onsubmit="login(event)" style="width:340px;text-align:center">
+<h3>🔐 Acesso</h3>
+<input id="senha" type="password" placeholder="Digite a senha">
+<button type="submit">Entrar</button>
+</form>
+</div>
 
-  const [login, setLogin] = useState({ nivel: "", nome: "" });
+<div id="app" class="hidden app">
 
-  const [novoAluno, setNovoAluno] = useState({ nome: "", turma: "" });
-  const [descricao, setDescricao] = useState("");
-  const [alunoSelecionado, setAlunoSelecionado] = useState("");
+<div class="nav">
+<button onclick="aba('home',this)">🏠 Home</button>
+<button onclick="aba('monitoria',this)">👩‍🏫 Monitoria</button>
+</div>
 
-  useEffect(() => {
-    setAlunos(JSON.parse(localStorage.getItem("alunos") || "[]"));
-    setLancamentos(JSON.parse(localStorage.getItem("lancamentos") || "[]"));
-  }, []);
+<button class="lancamento-btn" onclick="novoLancamento()">+ Novo Lançamento</button>
 
-  function entrar() {
-    if (login.nivel === "3") {
-      setUser({ nome: login.nome || "Monitora", nivel: 3 });
-      setScreen("dashboard");
-    } else {
-      alert("Acesso negado");
-    }
-  }
+<div class="nav">
+<button onclick="aba('alunos',this)">📋 Alunos</button>
+<button onclick="aba('cadastro',this)">➕ Cadastro</button>
+<button onclick="aba('eventos',this)">📅 Eventos</button>
+<button onclick="aba('lanc',this)">🧾 Lançamentos</button>
+<button onclick="aba('rel',this)">📊 Relatório</button>
+</div>
 
-  function salvarAlunos(data) {
-    localStorage.setItem("alunos", JSON.stringify(data));
-    setAlunos(data);
-  }
+<!-- HOME -->
+<div id="home" class="aba">
+<div class="card">
+<h3>📅 Avisos do dia</h3>
+<ul id="avisos"></ul>
+</div>
+</div>
 
-  function salvarLancamentos(data) {
-    localStorage.setItem("lancamentos", JSON.stringify(data));
-    setLancamentos(data);
-  }
+<!-- MONITORIA -->
+<div id="monitoria" class="aba hidden">
+<div class="card">
+<label>Nome</label><input id="m_nome">
+<label>Serviço</label><input id="m_servico">
+<label>Telefone</label><input id="m_tel">
+<label>Email</label><input id="m_email">
+<button onclick="salvarMonitora()">Salvar</button>
+</div>
+</div>
 
-  function cadastrarAluno() {
-    const updated = [...alunos, novoAluno];
-    salvarAlunos(updated);
-    setNovoAluno({ nome: "", turma: "" });
-  }
+<!-- CADASTRO -->
+<div id="cadastro" class="aba hidden">
+<div class="card" style="max-width:720px;margin:auto">
+<h3 style="margin-bottom:18px;text-align:center">Cadastro do Aluno</h3>
 
-  function lançar() {
-    const novo = {
-      aluno: alunoSelecionado,
-      descricao,
-      data: new Date().toLocaleString()
-    };
+<!-- FOTO -->
+<div style="display:flex;flex-direction:column;align-items:center;margin-bottom:18px">
+<label>Foto do aluno</label>
+<input type="file" onchange="img(this)" style="max-width:220px">
+<div class="preview" id="prev" style="margin-top:10px;width:56px;height:56px"></div>
+</div>
 
-    const updated = [...lancamentos, novo];
-    salvarLancamentos(updated);
-    setDescricao("");
-  }
+<!-- FORM LIMPO E ALINHADO -->
+<div style="display:flex;flex-direction:column;gap:12px">
 
-  function logout() {
-    setUser(null);
-    setScreen("login");
-  }
+<label>Nome do aluno</label>
+<input id="nome">
 
-  if (screen === "login") {
-    return (
-      <div className="p-6 max-w-md mx-auto">
-        <Card>
-          <CardContent className="p-4 space-y-3">
-            <h2 className="text-xl font-bold">🔐 Acesso Sistema Escolar</h2>
+<!-- LINHA: DATA + SERIE + TURMA -->
+<div style="display:flex;gap:12px;align-items:flex-end">
+<div style="width:160px">
+<label>Data de nascimento</label>
+<input type="date" id="nasc" style="width:100%">
+</div>
 
-            <Input
-              placeholder="Nível de acesso (3)"
-              value={login.nivel}
-              onChange={(e) => setLogin({ ...login, nivel: e.target.value })}
-            />
+<div style="width:80px">
+<label>Série</label>
+<input id="serie">
+</div>
 
-            <Input
-              placeholder="Seu nome"
-              value={login.nome}
-              onChange={(e) => setLogin({ ...login, nome: e.target.value })}
-            />
+<div style="width:80px">
+<label>Turma</label>
+<input id="turma">
+</div>
+</div>
 
-            <Button onClick={entrar}>Entrar</Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+<label>Escola</label>
+<input id="escola">
 
-  return (
-    <div className="p-4 max-w-5xl mx-auto space-y-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">📚 App Escolar Profissional</h1>
-        <Button onClick={logout}>Sair</Button>
-      </div>
+<label>Responsável</label>
+<input id="resp">
 
-      <div className="flex gap-2 flex-wrap">
-        <Button onClick={() => setScreen("alunos")}>Alunos</Button>
-        <Button onClick={() => setScreen("cadastrar")}>Cadastrar</Button>
-        <Button onClick={() => setScreen("lancamentos")}>Lançamentos</Button>
-        <Button onClick={() => setScreen("relatorios")}>Relatórios</Button>
-      </div>
+<!-- HORÁRIOS MAIS COMPACTOS -->
+<div style="display:flex;gap:12px">
+<div style="flex:1">
+<label>Horário de entrada</label>
+<input type="time" id="h1" value="08:00">
+</div>
 
-      {screen === "alunos" && (
-        <Card>
-          <CardContent className="p-4">
-            <h2 className="font-bold mb-2">👥 Alunos</h2>
-            {alunos.map((a, i) => (
-              <div key={i} className="border-b py-1">
-                {a.nome} - {a.turma}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+<div style="flex:1">
+<label>Horário de saída</label>
+<input type="time" id="h2" value="12:00">
+</div>
+</div>
 
-      {screen === "cadastrar" && (
-        <Card>
-          <CardContent className="p-4 space-y-2">
-            <h2 className="font-bold">➕ Cadastrar Aluno</h2>
-            <Input
-              placeholder="Nome"
-              value={novoAluno.nome}
-              onChange={(e) => setNovoAluno({ ...novoAluno, nome: e.target.value })}
-            />
-            <Input
-              placeholder="Turma"
-              value={novoAluno.turma}
-              onChange={(e) => setNovoAluno({ ...novoAluno, turma: e.target.value })}
-            />
-            <Button onClick={cadastrarAluno}>Salvar</Button>
-          </CardContent>
-        </Card>
-      )}
+<!-- OBSERVAÇÕES AJUSTADO -->
+<div style="display:flex;flex-direction:column;align-items:center;margin-top:6px">
+<label style="align-self:flex-start">Observações Gerais</label>
+<textarea id="obsAluno" style="height:70px;width:100%;max-width:620px"></textarea>
+</div>
 
-      {screen === "lancamentos" && (
-        <Card>
-          <CardContent className="p-4 space-y-2">
-            <h2 className="font-bold">🧾 Lançamentos</h2>
+<button onclick="salvarAluno()">Salvar</button>
 
-            <select
-              className="w-full p-2 border rounded"
-              onChange={(e) => setAlunoSelecionado(e.target.value)}
-            >
-              <option>Selecione aluno</option>
-              {alunos.map((a, i) => (
-                <option key={i} value={a.nome}>{a.nome}</option>
-              ))}
-            </select>
+</div>
+</div>
+</div>
 
-            <Input
-              placeholder="Descrição"
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-            />
+<!-- ALUNOS -->
+<div id="alunos" class="aba hidden"><div class="card" id="lista"></div></div>
 
-            <Button onClick={lançar}>Lançar</Button>
-          </CardContent>
-        </Card>
-      )}
+<!-- EVENTOS -->
+<div id="eventos" class="aba hidden">
+<div class="card">
+<label>Título</label><input id="evT">
+<label>Data</label><input type="date" id="evD">
+<label>Descrição</label><textarea id="evDesc"></textarea>
+<button onclick="salvarEvento()">Salvar</button>
+<div id="listaEventos"></div>
+</div>
+</div>
 
-      {screen === "relatorios" && (
-        <Card>
-          <CardContent className="p-4">
-            <h2 className="font-bold">📊 Relatórios</h2>
-            {lancamentos.map((l, i) => (
-              <div key={i} className="border-b py-1">
-                {l.aluno} - {l.descricao} ({l.data})
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
+<!-- LANÇAMENTOS -->
+<div id="lanc" class="aba hidden">
+<div class="card hidden" id="formLanc">
+<select id="lAluno"></select>
+<input type="date" id="lData">
+<input type="time" id="lHora">
+<textarea id="lObs" placeholder="Observações"></textarea>
+<button onclick="salvarLanc()">Salvar</button>
+</div>
+<div class="card" id="listaLanc"></div>
+</div>
+
+<!-- RELATORIO -->
+<div id="rel" class="aba hidden">
+<div class="card">
+<select id="relAluno"></select>
+<button onclick="gerarRel()">Gerar</button>
+<button onclick="window.print()">Exportar PDF</button>
+<pre id="saida"></pre>
+</div>
+</div>
+
+</div>
+
+<script>
+const SENHA='acesso123'
+const get=k=>JSON.parse(localStorage.getItem(k)||'[]')
+const set=(k,v)=>localStorage.setItem(k,JSON.stringify(v))
+let foto=''
+let editIndex=null
+
+function msg(t){msgBox.innerText=t;msgBox.style.display='block';setTimeout(()=>msgBox.style.display='none',2000)}
+const msgBox=document.getElementById('msg')
+
+function login(e){e.preventDefault();if(document.getElementById('senha').value===SENHA){loginScreen.style.display='none';app.classList.remove('hidden');carregar()}}
+
+function aba(id,btn){document.querySelectorAll('.aba').forEach(x=>x.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active')}
+
+function img(i){let f=i.files[0];let r=new FileReader();r.onload=e=>{foto=e.target.result;prev.innerHTML='<img src="'+foto+'">'};r.readAsDataURL(f)}
+
+function salvarMonitora(){set('monitora',{nome:m_nome.value,servico:m_servico.value,tel:m_tel.value,email:m_email.value});msg('Salvo com sucesso!')}
+
+function salvarAluno(){
+let a=get('alunos');
+
+if(editIndex!==null){
+ a[editIndex]={nome:nome.value,nasc:nasc.value,escola:escola.value,foto};
+ editIndex=null;
+}else{
+ a.push({nome:nome.value,nasc:nasc.value,escola:escola.value,foto});
 }
+
+set('alunos',a);
+msg('Salvo com sucesso!');
+resetAluno();
+carregar();
+aba('alunos')
+}
+
+function resetAluno(){nome.value='';nasc.value='';escola.value='';resp.value='';serie.value='';turma.value='';h1.value='08:00';h2.value='12:00';prev.innerHTML='';foto=''}
+
+function salvarEvento(){let e=get('eventos');e.push({t:evT.value,d:evD.value});set('eventos',e);msg('Salvo com sucesso!');evT.value='';evD.value='';evDesc.value='';carregar()}
+
+function novoLancamento(){aba('lanc');formLanc.classList.remove('hidden')}
+
+function salvarLanc(){let l=get('lanc');l.push({aluno:lAluno.value,data:lData.value,hora:lHora.value,obs:lObs.value});set('lanc',l);msg('Salvo com sucesso!');lObs.value='';formLanc.classList.add('hidden');carregar()}
+
+function deletarAluno(i){
+let a=get('alunos');
+a.splice(i,1);
+set('alunos',a);
+msg('Excluído com sucesso!');
+carregar()
+}
+
+function editarAluno(i){
+let a=get('alunos');
+let al=a[i];
+
+nome.value=al.nome||'';
+nasc.value=al.nasc||'';
+escola.value=al.escola||'';
+
+if(al.foto){
+ foto=al.foto;
+ prev.innerHTML='<img src="'+foto+'">';
+}
+
+editIndex=i;
+aba('cadastro');
+}
+
+function carregar(){
+let a=get('alunos'),l=get('lanc'),e=get('eventos')
+lista.innerHTML='';relAluno.innerHTML='';lAluno.innerHTML='';listaEventos.innerHTML='';listaLanc.innerHTML='';avisos.innerHTML=''
+
+ a.forEach((x,i)=>{
+ let idade='-';if(x.nasc){let n=new Date(x.nasc);idade=new Date().getFullYear()-n.getFullYear()}
+ lista.innerHTML+=`<div class='lista-item'><div class='lista-info'><div class='preview'>${x.foto?`<img src='${x.foto}'>`:''}</div><div>${x.nome}<br>${idade} anos</div></div><div class='actions'>
+<button class='btn-edit' onclick='editarAluno(${i})'>✏️</button>
+<button class='btn-delete' onclick='deletarAluno(${i})'>🗑️</button>
+</div></div>`
+ relAluno.innerHTML+=`<option value=${i}>${x.nome}</option>`
+ lAluno.innerHTML+=`<option value=${i}>${x.nome}</option>`
+ })
+
+ e.forEach(x=>{
+ listaEventos.innerHTML+=`<div>${x.d} - ${x.t}</div>`
+ if(x.d===new Date().toISOString().slice(0,10)) avisos.innerHTML+=`<li>${x.t}</li>`
+ })
+
+ l.forEach(x=>listaLanc.innerHTML+=`<div>${x.data} ${x.hora} - ${x.obs}</div>`)
+}
+
+function gerarRel(){let a=get('alunos');let i=relAluno.value;if(!a[i])return;saida.innerText=`RELATÓRIO\nAluno:${a[i].nome}\nEscola:${a[i].escola}\nGerado em:${new Date().toLocaleDateString()}`}
+</script>
+
+</body>
+</html>
