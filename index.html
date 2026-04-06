@@ -61,53 +61,38 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqemV2Z3VucWl3Y2x3eWJ4dnVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MjM5MjEsImV4cCI6MjA5MDk5OTkyMX0.4G9fJhyHijhkNmRERzFJGto3aH1QUWS6KTq7nEkX0co';
     const supabase = supabasejs.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // CONTROLE DE ACESSO
-    supabase.auth.onAuthStateChange((event, session) => {
-        const authView = document.getElementById('auth-section');
-        const appView = document.getElementById('app-section');
-        
-        if (session) {
-            authView.classList.add('hidden');
-            appView.classList.remove('hidden');
-            document.getElementById('user-display').innerText = session.user.email;
-            carregarAlunos();
-        } else {
-            authView.classList.remove('hidden');
-            appView.classList.add('hidden');
-        }
-    });
-
-    async function login() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) alert("Erro: " + error.message);
-    }
-
-    async function logout() { await supabase.auth.signOut(); }
-
-    // FUNÇÕES DE DADOS
+// --- FUNÇÕES DE DADOS ---
     async function addAluno() {
-        const nome = document.getElementById('nome-aluno').value;
-        const escola = document.getElementById('escola-aluno').value;
+        const nome = document.getElementById('nome-aluno')?.value;
+        const escola = document.getElementById('escola-aluno')?.value;
         if (!nome) return alert("Digite o nome!");
 
-        const { error } = await supabase.from('alunos').insert([{ nome, escola }]);
-        if (error) alert(error.message);
-        else {
-            document.getElementById('nome-aluno').value = '';
-            document.getElementById('escola-aluno').value = '';
+        const { error } = await _supabase.from('alunos').insert([{ nome, escola, status: 'ativo' }]);
+        
+        if (error) {
+            alert("Erro ao salvar: " + error.message);
+        } else {
+            alert("Aluno cadastrado!");
+            if(document.getElementById('nome-aluno')) document.getElementById('nome-aluno').value = '';
+            if(document.getElementById('escola-aluno')) document.getElementById('escola-aluno').value = '';
             carregarAlunos();
         }
     }
 
     async function carregarAlunos() {
-        const { data, error } = await supabase.from('alunos')
+        const { data, error } = await _supabase.from('alunos')
             .select('*')
             .eq('status', 'ativo')
             .order('nome');
 
+        if (error) {
+            console.log("Erro ao carregar:", error.message);
+            return;
+        }
+
         const container = document.getElementById('lista-alunos');
+        if (!container) return;
+
         container.innerHTML = data.map(aluno => `
             <div class="bg-slate-800 p-5 rounded-3xl border border-slate-700 hover:border-indigo-500/50 transition-all group">
                 <div class="flex justify-between items-start mb-4">
