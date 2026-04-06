@@ -9,6 +9,7 @@
     <style>
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); }
         @media print { .no-print { display: none; } }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
@@ -20,8 +21,8 @@
                 <p class="text-slate-400 text-sm mt-2">Gestão Inteligente para Monitoras</p>
             </div>
             <div class="space-y-4">
-                <input id="email" type="email" placeholder="Seu e-mail" class="w-full p-4 rounded-2xl bg-slate-700 border-none focus:ring-2 focus:ring-indigo-500 outline-none">
-                <input id="password" type="password" placeholder="Sua senha" class="w-full p-4 rounded-2xl bg-slate-700 border-none focus:ring-2 focus:ring-indigo-500 outline-none">
+                <input id="email" type="email" placeholder="Seu e-mail" class="w-full p-4 rounded-2xl bg-slate-700 border-none focus:ring-2 focus:ring-indigo-500 outline-none text-white">
+                <input id="password" type="password" placeholder="Sua senha" class="w-full p-4 rounded-2xl bg-slate-700 border-none focus:ring-2 focus:ring-indigo-500 outline-none text-white">
                 <button onclick="login()" class="w-full bg-indigo-600 hover:bg-indigo-500 p-4 rounded-2xl font-bold transition-all transform active:scale-95 shadow-lg shadow-indigo-900/40">Entrar</button>
             </div>
         </div>
@@ -39,32 +40,59 @@
         </nav>
 
         <main class="max-w-5xl mx-auto p-4 space-y-6">
-            
             <section class="no-print bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-xl">
                 <h3 class="text-lg font-bold mb-4 flex items-center gap-2">👤 Novo Aluno</h3>
                 <div class="flex flex-col md:flex-row gap-3">
-                    <input id="nome-aluno" type="text" placeholder="Nome Completo" class="flex-1 p-3 rounded-xl bg-slate-900 border-none focus:ring-2 focus:ring-indigo-500">
-                    <input id="escola-aluno" type="text" placeholder="Escola" class="flex-1 p-3 rounded-xl bg-slate-900 border-none focus:ring-2 focus:ring-indigo-500">
+                    <input id="nome-aluno" type="text" placeholder="Nome Completo" class="flex-1 p-3 rounded-xl bg-slate-900 border-none focus:ring-2 focus:ring-indigo-500 text-white">
+                    <input id="escola-aluno" type="text" placeholder="Escola" class="flex-1 p-3 rounded-xl bg-slate-900 border-none focus:ring-2 focus:ring-indigo-500 text-white">
                     <button onclick="addAluno()" class="bg-indigo-600 hover:bg-indigo-500 px-8 py-3 rounded-xl font-bold transition-all">Cadastrar</button>
                 </div>
             </section>
 
-            <div id="lista-alunos" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                </div>
+            <div id="lista-alunos" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </main>
     </div>
 
-    <div id="print-area" class="hidden bg-white text-black p-10 min-h-screen"></div>
-
 <script>
+    // 1. CONFIGURAÇÃO (Padronizada como _supabase)
     const SUPABASE_URL = 'https://ujzevgunqiwclwybxvun.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqemV2Z3VucWl3Y2x3eWJ4dnVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MjM5MjEsImV4cCI6MjA5MDk5OTkyMX0.4G9fJhyHijhkNmRERzFJGto3aH1QUWS6KTq7nEkX0co';
-    const supabase = supabasejs.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// --- FUNÇÕES DE DADOS ---
+    // 2. MONITOR DE SESSÃO (Faz as telas trocarem sozinhas)
+    _supabase.auth.onAuthStateChange((event, session) => {
+        const authView = document.getElementById('auth-section');
+        const appView = document.getElementById('app-section');
+        
+        if (session) {
+            authView.classList.add('hidden');
+            appView.classList.remove('hidden');
+            document.getElementById('user-display').innerText = session.user.email;
+            carregarAlunos();
+        } else {
+            authView.classList.remove('hidden');
+            appView.classList.add('hidden');
+        }
+    });
+
+    // 3. FUNÇÃO DE LOGIN
+    async function login() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        const { error } = await _supabase.auth.signInWithPassword({ email, password });
+        if (error) alert("Erro: " + error.message);
+    }
+
+    // 4. FUNÇÃO DE LOGOUT
+    async function logout() {
+        await _supabase.auth.signOut();
+    }
+
+    // 5. FUNÇÕES DE DADOS
     async function addAluno() {
-        const nome = document.getElementById('nome-aluno')?.value;
-        const escola = document.getElementById('escola-aluno')?.value;
+        const nome = document.getElementById('nome-aluno').value;
+        const escola = document.getElementById('escola-aluno').value;
         if (!nome) return alert("Digite o nome!");
 
         const { error } = await _supabase.from('alunos').insert([{ nome, escola, status: 'ativo' }]);
@@ -73,8 +101,8 @@
             alert("Erro ao salvar: " + error.message);
         } else {
             alert("Aluno cadastrado!");
-            if(document.getElementById('nome-aluno')) document.getElementById('nome-aluno').value = '';
-            if(document.getElementById('escola-aluno')) document.getElementById('escola-aluno').value = '';
+            document.getElementById('nome-aluno').value = '';
+            document.getElementById('escola-aluno').value = '';
             carregarAlunos();
         }
     }
@@ -85,39 +113,31 @@
             .eq('status', 'ativo')
             .order('nome');
 
-        if (error) {
-            console.log("Erro ao carregar:", error.message);
-            return;
-        }
+        if (error) return console.error(error);
 
         const container = document.getElementById('lista-alunos');
-        if (!container) return;
-
         container.innerHTML = data.map(aluno => `
-            <div class="bg-slate-800 p-5 rounded-3xl border border-slate-700 hover:border-indigo-500/50 transition-all group">
+            <div class="bg-slate-800 p-5 rounded-3xl border border-slate-700">
                 <div class="flex justify-between items-start mb-4">
                     <div>
                         <h4 class="font-bold text-xl text-white">${aluno.nome}</h4>
-                        <p class="text-sm text-slate-400">${aluno.escola || 'Escola não informada'}</p>
+                        <p class="text-sm text-slate-400">${aluno.escola || 'Sem escola'}</p>
                     </div>
                     <button onclick="arquivarAluno('${aluno.id}')" class="text-slate-600 hover:text-red-400">🗑️</button>
                 </div>
-                <div class="flex gap-2 mt-4">
-                    <button onclick="verDetalhes('${aluno.id}')" class="flex-1 bg-slate-700 hover:bg-indigo-600 text-xs py-2 rounded-lg font-bold transition-all">Ver Rotina</button>
-                    <button onclick="gerarPDF('${aluno.id}')" class="bg-slate-700 hover:bg-emerald-600 px-3 py-2 rounded-lg text-xs transition-all">📄</button>
+                <div class="flex gap-2">
+                    <button class="flex-1 bg-slate-700 py-2 rounded-lg text-xs font-bold">Ver Rotina</button>
                 </div>
             </div>
         `).join('');
     }
 
     async function arquivarAluno(id) {
-        if(confirm("Deseja arquivar este aluno?")) {
-            await supabase.from('alunos').update({ status: 'arquivado' }).eq('id', id);
+        if(confirm("Arquivar aluno?")) {
+            await _supabase.from('alunos').update({ status: 'arquivado' }).eq('id', id);
             carregarAlunos();
         }
     }
-
-    // O n8n poderá usar essa mesma estrutura de dados para suas automações!
 </script>
 </body>
 </html>
