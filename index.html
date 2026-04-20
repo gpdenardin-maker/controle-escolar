@@ -98,7 +98,11 @@
     appView.classList.remove('hidden');
     document.getElementById('user-display').innerText = session.user.email;
     carregarAlunos();
+} else {
+    authView.classList.remove('hidden');
+    appView.classList.add('hidden');
 }
+});
 
     // 3. FUNÇÃO DE LOGIN
     async function login() {
