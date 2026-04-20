@@ -68,16 +68,37 @@
         const authView = document.getElementById('auth-section');
         const appView = document.getElementById('app-section');
         
-        if (session) {
-            authView.classList.add('hidden');
-            appView.classList.remove('hidden');
-            document.getElementById('user-display').innerText = session.user.email;
-            carregarAlunos();
-        } else {
-            authView.classList.remove('hidden');
-            appView.classList.add('hidden');
+       if (session) {
+    const url = new URL(window.location.href);
+
+    // 🔥 SE FOR RECUPERAÇÃO DE SENHA
+    if (url.hash.includes('type=recovery')) {
+        alert("Agora defina sua nova senha.");
+
+        const novaSenha = prompt("Digite sua nova senha:");
+
+        if (novaSenha) {
+            _supabase.auth.updateUser({
+                password: novaSenha
+            }).then(({ error }) => {
+                if (error) {
+                    alert("Erro: " + error.message);
+                } else {
+                    alert("Senha atualizada com sucesso!");
+                    window.location.href = "https://gpdenardin-maker.github.io/controle-escolar/";
+                }
+            });
         }
-    });
+
+        return; // 🚫 impede de entrar no sistema direto
+    }
+
+    // LOGIN NORMAL
+    authView.classList.add('hidden');
+    appView.classList.remove('hidden');
+    document.getElementById('user-display').innerText = session.user.email;
+    carregarAlunos();
+}
 
     // 3. FUNÇÃO DE LOGIN
     async function login() {
