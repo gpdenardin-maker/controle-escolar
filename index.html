@@ -150,7 +150,9 @@
         return;
     }
 
-    const { error } = await _supabase.auth.resetPasswordForEmail(email);
+    const { error } = await _supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://gpdenardin-maker.github.io/controle-escolar/'
+});
 
     if (error) {
         alert("Erro: " + error.message);
