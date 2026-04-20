@@ -24,6 +24,10 @@
                 <input id="email" type="email" placeholder="Seu e-mail" class="w-full p-4 rounded-2xl bg-slate-700 border-none focus:ring-2 focus:ring-indigo-500 outline-none text-white">
                 <input id="password" type="password" placeholder="Sua senha" class="w-full p-4 rounded-2xl bg-slate-700 border-none focus:ring-2 focus:ring-indigo-500 outline-none text-white">
                 <button onclick="login()" class="w-full bg-indigo-600 hover:bg-indigo-500 p-4 rounded-2xl font-bold transition-all transform active:scale-95 shadow-lg shadow-indigo-900/40">Entrar</button>
+                <p onclick="recuperarSenha()" style="margin-top:10px;cursor:pointer;color:#818cf8;font-size:12px;text-align:center">
+  Esqueci minha senha
+</p>
+                
             </div>
         </div>
     </div>
@@ -82,7 +86,7 @@
         
         const { error } = await _supabase.auth.signInWithPassword({ email, password });
         if (error) alert("Erro: " + error.message);
-    }
+    }      
 
     // 4. FUNÇÃO DE LOGOUT
     async function logout() {
@@ -138,6 +142,22 @@
             carregarAlunos();
         }
     }
+    async function recuperarSenha() {
+    const email = document.getElementById('email').value;
+
+    if (!email) {
+        alert("Digite seu e-mail primeiro.");
+        return;
+    }
+
+    const { error } = await _supabase.auth.resetPasswordForEmail(email);
+
+    if (error) {
+        alert("Erro: " + error.message);
+    } else {
+        alert("Se o e-mail estiver correto, você receberá um link.");
+    }
+}
 </script>
 </body>
 </html>
