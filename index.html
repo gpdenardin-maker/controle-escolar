@@ -24,7 +24,8 @@
                 <input id="email" type="email" placeholder="Seu e-mail" class="w-full p-4 rounded-2xl bg-slate-700 border-none focus:ring-2 focus:ring-indigo-500 outline-none text-white">
                 <input id="password" type="password" placeholder="Sua senha" class="w-full p-4 rounded-2xl bg-slate-700 border-none focus:ring-2 focus:ring-indigo-500 outline-none text-white">
                 <button onclick="login()" class="w-full bg-indigo-600 hover:bg-indigo-500 p-4 rounded-2xl font-bold transition-all transform active:scale-95 shadow-lg shadow-indigo-900/40">Entrar</button>
-                <p onclick="recuperarSenha(); alert('clicou');"> style="margin-top:10px;cursor:pointer;color:#818cf8;font-size:12px;text-align:center">
+                <p onclick="recuperarSenha(); alert('clicou');" 
+   style="margin-top:10px;cursor:pointer;color:#818cf8;font-size:12px;text-align:center">
   Esqueci minha senha
 </p>
                 
@@ -63,14 +64,22 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqemV2Z3VucWl3Y2x3eWJ4dnVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MjM5MjEsImV4cCI6MjA5MDk5OTkyMX0.4G9fJhyHijhkNmRERzFJGto3aH1QUWS6KTq7nEkX0co';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+let inicializado = false;
+
        (async () => {
 
     await _supabase.auth.exchangeCodeForSession(window.location.href);
 
     _supabase.auth.onAuthStateChange(async (event, session) => {
 
-        const authView = document.getElementById('auth-section');
-        const appView = document.getElementById('app-section');
+    if (!inicializado) {
+        inicializado = true;
+    } else {
+        return; // 🚫 impede repetição (resolve o piscar)
+    }
+
+    const authView = document.getElementById('auth-section');
+    const appView = document.getElementById('app-section');
 
         // 🔥 SÓ entra aqui se for recuperação REAL
         if (event === 'PASSWORD_RECOVERY') {
