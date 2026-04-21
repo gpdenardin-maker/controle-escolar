@@ -63,44 +63,58 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqemV2Z3VucWl3Y2x3eWJ4dnVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MjM5MjEsImV4cCI6MjA5MDk5OTkyMX0.4G9fJhyHijhkNmRERzFJGto3aH1QUWS6KTq7nEkX0co';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+       (async () => {
+
     await _supabase.auth.exchangeCodeForSession(window.location.href);
-    // 2. MONITOR DE SESSÃO (Faz as telas trocarem sozinhas)
-    _supabase.auth.onAuthStateChange((event, session) => {
+
+    _supabase.auth.onAuthStateChange(async (event, session) => {
+
         const authView = document.getElementById('auth-section');
         const appView = document.getElementById('app-section');
-        
-       if (session) {
-   
-         alert("Agora defina sua nova senha.");
 
-        const novaSenha = prompt("Digite sua nova senha:");
+        // 🔥 SÓ entra aqui se for recuperação REAL
+        if (event === 'PASSWORD_RECOVERY') {
 
-        if (novaSenha) {
-            _supabase.auth.updateUser({
-                password: novaSenha
-            }).then(({ error }) => {
+            authView.classList.remove('hidden');
+            appView.classList.add('hidden');
+
+            alert("Agora defina sua nova senha.");
+
+            const novaSenha = prompt("Digite sua nova senha:");
+
+            if (novaSenha) {
+                const { error } = await _supabase.auth.updateUser({
+                    password: novaSenha
+                });
+
                 if (error) {
                     alert("Erro: " + error.message);
                 } else {
                     alert("Senha atualizada com sucesso!");
-                    window.location.href = "https://gpdenardin-maker.github.io/controle-escolar/";
+
+                    await _supabase.auth.signOut();
+
+                    window.location.href =
+                        "https://gpdenardin-maker.github.io/controle-escolar/";
                 }
-            });
+            }
+
+            return;
         }
 
-        return; // 🚫 impede de entrar no sistema direto
-    }
+        // 🔥 LOGIN NORMAL
+        if (session) {
+            authView.classList.add('hidden');
+            appView.classList.remove('hidden');
+            document.getElementById('user-display').innerText = session.user.email;
+            carregarAlunos();
+        } else {
+            authView.classList.remove('hidden');
+            appView.classList.add('hidden');
+        }
 
-    // LOGIN NORMAL
-    authView.classList.add('hidden');
-    appView.classList.remove('hidden');
-    document.getElementById('user-display').innerText = session.user.email;
-    carregarAlunos();
-} else {
-    authView.classList.remove('hidden');
-    appView.classList.add('hidden');
-}
-});
+    });
+
 
     // 3. FUNÇÃO DE LOGIN
     async function login() {
@@ -183,6 +197,7 @@
         alert("Se o e-mail estiver correto, você receberá um link.");
     }
 }
+})(); 
 </script>
 </body>
 </html>
