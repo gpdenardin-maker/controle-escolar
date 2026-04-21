@@ -63,17 +63,15 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqemV2Z3VucWl3Y2x3eWJ4dnVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MjM5MjEsImV4cCI6MjA5MDk5OTkyMX0.4G9fJhyHijhkNmRERzFJGto3aH1QUWS6KTq7nEkX0co';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    await _supabase.auth.exchangeCodeForSession(window.location.href);
     // 2. MONITOR DE SESSÃO (Faz as telas trocarem sozinhas)
     _supabase.auth.onAuthStateChange((event, session) => {
         const authView = document.getElementById('auth-section');
         const appView = document.getElementById('app-section');
         
        if (session) {
-    const url = new URL(window.location.href);
-
-    // 🔥 SE FOR RECUPERAÇÃO DE SENHA
-    if (url.hash.includes('type=recovery')) {
-        alert("Agora defina sua nova senha.");
+   
+         alert("Agora defina sua nova senha.");
 
         const novaSenha = prompt("Digite sua nova senha:");
 
