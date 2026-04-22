@@ -14,7 +14,7 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
 
-    <div id="auth-section" class="flex items-center justify-center min-h-screen p-6">
+    <div id="auth-section" class="hidden flex items-center justify-center min-h-screen p-6">
         <div class="bg-slate-800 p-8 rounded-3xl shadow-2xl w-full max-w-md border border-slate-700">
             <div class="text-center mb-8">
                 <h1 class="text-3xl font-black text-indigo-400">Monitoria Pro</h1>
@@ -64,20 +64,44 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqemV2Z3VucWl3Y2x3eWJ4dnVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MjM5MjEsImV4cCI6MjA5MDk5OTkyMX0.4G9fJhyHijhkNmRERzFJGto3aH1QUWS6KTq7nEkX0co';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let inicializado = false;
 
        (async () => {
 
     await _supabase.auth.exchangeCodeForSession(window.location.href);
+           const { data: { session } } = await _supabase.auth.getSession();
 
-    _supabase.auth.onAuthStateChange(async (event, session) => {
+const authView = document.getElementById('auth-section');
+const appView = document.getElementById('app-section');
 
-    if (!inicializado) {
-        inicializado = true;
-    } else {
-        return; // 🚫 impede repetição (resolve o piscar)
+if (session) {
+    authView.classList.add('hidden');
+    appView.classList.remove('hidden');
+    document.getElementById('user-display').innerText = session.user.email;
+    carregarAlunos();
+} else {
+    authView.classList.remove('hidden');
+    appView.classList.add('hidden');
+}
+
+   _supabase.auth.onAuthStateChange(async (event, session) => {
+
+    // 👇 BLOCO NOVO (só isso!)
+    if (session && event === 'SIGNED_IN') {
+        const authView = document.getElementById('auth-section');
+        const appView = document.getElementById('app-section');
+
+        authView.classList.add('hidden');
+        appView.classList.remove('hidden');
+        document.getElementById('user-display').innerText = session.user.email;
+        carregarAlunos();
     }
 
+    // 🔥 seu código de recuperação continua aqui
+    if (event === 'PASSWORD_RECOVERY') {
+        ...
+    }
+});
+   
     const authView = document.getElementById('auth-section');
     const appView = document.getElementById('app-section');
 
@@ -110,18 +134,6 @@ let inicializado = false;
 
             return;
         }
-
-        // 🔥 LOGIN NORMAL
-        if (session) {
-            authView.classList.add('hidden');
-            appView.classList.remove('hidden');
-            document.getElementById('user-display').innerText = session.user.email;
-            carregarAlunos();
-        } else {
-            authView.classList.remove('hidden');
-            appView.classList.add('hidden');
-        }
-
     });
 
 
