@@ -63,7 +63,7 @@
     const SUPABASE_URL = 'https://ujzevgunqiwclwybxvun.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqemV2Z3VucWl3Y2x3eWJ4dnVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MjM5MjEsImV4cCI6MjA5MDk5OTkyMX0.4G9fJhyHijhkNmRERzFJGto3aH1QUWS6KTq7nEkX0co';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+    let jaCarregouTela = false;
 
        (async () => {
 
@@ -84,6 +84,9 @@ if (session) {
 }
 
  _supabase.auth.onAuthStateChange(async (event, session) => {
+
+    if (jaCarregouTela) return;
+    jaCarregouTela = true;
 
     const authView = document.getElementById('auth-section');
     const appView = document.getElementById('app-section');
