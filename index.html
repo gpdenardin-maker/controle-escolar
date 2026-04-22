@@ -89,7 +89,7 @@ if (session) {
     const appView = document.getElementById('app-section');
 
     // LOGIN
-    if (session && event === 'SIGNED_IN') {
+    if (session) {
         authView.classList.add('hidden');
         appView.classList.remove('hidden');
         document.getElementById('user-display').innerText = session.user.email;
