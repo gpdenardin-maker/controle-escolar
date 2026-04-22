@@ -83,58 +83,25 @@ if (session) {
     appView.classList.add('hidden');
 }
 
-   _supabase.auth.onAuthStateChange(async (event, session) => {
+ _supabase.auth.onAuthStateChange(async (event, session) => {
 
-    // 👇 BLOCO NOVO (só isso!)
+    const authView = document.getElementById('auth-section');
+    const appView = document.getElementById('app-section');
+
+    // LOGIN
     if (session && event === 'SIGNED_IN') {
-        const authView = document.getElementById('auth-section');
-        const appView = document.getElementById('app-section');
-
         authView.classList.add('hidden');
         appView.classList.remove('hidden');
         document.getElementById('user-display').innerText = session.user.email;
         carregarAlunos();
     }
 
-    // 🔥 seu código de recuperação continua aqui
+    // RECUPERAÇÃO (simples por enquanto)
     if (event === 'PASSWORD_RECOVERY') {
-        ...
+        alert("Recuperação de senha detectada.");
     }
+
 });
-   
-    const authView = document.getElementById('auth-section');
-    const appView = document.getElementById('app-section');
-
-        // 🔥 SÓ entra aqui se for recuperação REAL
-        if (event === 'PASSWORD_RECOVERY') {
-
-            authView.classList.remove('hidden');
-            appView.classList.add('hidden');
-
-            alert("Agora defina sua nova senha.");
-
-            const novaSenha = prompt("Digite sua nova senha:");
-
-            if (novaSenha) {
-                const { error } = await _supabase.auth.updateUser({
-                    password: novaSenha
-                });
-
-                if (error) {
-                    alert("Erro: " + error.message);
-                } else {
-                    alert("Senha atualizada com sucesso!");
-
-                    await _supabase.auth.signOut();
-
-                    window.location.href =
-                        "https://gpdenardin-maker.github.io/controle-escolar/";
-                }
-            }
-
-            return;
-        }
-    });
 
 
     // 3. FUNÇÃO DE LOGIN
